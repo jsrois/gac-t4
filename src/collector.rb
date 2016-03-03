@@ -23,7 +23,7 @@ def parse_line line
       'NewTestCase' => %r{Assert that (?<test_case_name>[^\n]+)}, #reading test cases
       'TestCaseDefinition' => %r{As calling (?<method>.+) will return (?<return_value>[^\n]+)},
       'TestCaseDefinitionOpening' => %r{As\n},
-      'TestCaseDefinitionClosing' => %r{^\t*calling (?<method>[^\s]+) will return (?<return_value>[^\n]+)},
+      'TestCaseDefinitionClosing' => %r{^[\t\W]+(?:and )?calling (?<method>[^\s]+) will return (?<return_value>[^\n]+)},
       'InvocationPrecondition' => %r{(?:After|And after) calling (?<method_name>[^\s]+)(?: with argument (?<argument>[^\n,]+))?},
       'AssignmentPrecondition' => %r{(?:After|And after) setting (?<lso>[^\s]+) to (?<rso>[^\n,]+)}
   }
@@ -89,7 +89,7 @@ class Collector
     #for each line
     File.open(file_name).each do |line|
       parsed_line = parse_line line
-      raise "Invalid spec format " + line if  parsed_line.class == InvalidLine
+      raise "Invalid spec format:\n" + line if  parsed_line.class == InvalidLine
       update_on_new_line parsed_line
     end
     @test_suite
