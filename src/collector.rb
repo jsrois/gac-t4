@@ -7,6 +7,8 @@ class ParsedLine
   end
 end
 
+
+# These are the type of lines considered in the specification file
 class InvalidLine < ParsedLine;end
 class SetupLine < ParsedLine;end
 class NewTestCase < ParsedLine;end
@@ -16,6 +18,10 @@ class TestCaseDefinitionClosing < ParsedLine; end
 class InvocationPrecondition < ParsedLine; end
 class AssignmentPrecondition < ParsedLine; end
 
+# converts "a plain text sentence" into "APlainTextSentence" (camelcase)
+def camelize(str)
+  str.split(' ').map {|w| w.capitalize}.join if str
+end
 
 def parse_line line
   regex_array = {
@@ -38,10 +44,12 @@ def parse_line line
   InvalidLine.new Hash.new
 end
 
+# Base class for states 
 class State
   def update input, context;  end
 end
 
+# Starting state (looking for setup)
 class InitialState < State
   def update (input, context)
     if input.class == SetupLine
@@ -55,17 +63,16 @@ class InitialState < State
   end
 end
 
-def camelize(str)
-  str.split(' ').map {|w| w.capitalize}.join if str
-end
-
+# registering new tests
 class AddingTestCases < State
   def update (input, context)
-    next_state = AddingTestCases.new
-    if input.class == NewTestCase then
+    next_state = AddingTestCases.new    
+    if input.class == NewTestCase
       # we don't wanna lose the current test_case!
       context.test_suite.add_test_case context.current_test_case if context.current_test_case
       context.current_test_case = TestCase.new camelize(input.params["test_case_name"])
+    elsif input.class == 'TestCaseDefinition'
+    	context.current_test_case.expectations.push Expectation.new input.params["method"], input.params["return_value"]
     end
     next_state
   end
@@ -91,7 +98,8 @@ class Collector
       parsed_line = parse_line line
       raise "Invalid spec format:\n" + line if  parsed_line.class == InvalidLine
       update_on_new_line parsed_line
-    end
+    end    
+    @test_suite.add_test_case current_test_case if current_test_case && @state.class == AddingTestCases
     @test_suite
   end
 end

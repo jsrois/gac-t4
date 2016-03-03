@@ -1,6 +1,5 @@
 require 'collector'
 require 'gmock_serializer'
-
 require 'erb'
 
 if ARGV[0] then
