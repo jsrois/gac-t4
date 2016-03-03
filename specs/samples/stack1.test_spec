@@ -1,0 +1,5 @@
+From class Stack<string> in "stack.h"
+	Assert that no element should be empty
+	Assert that stack should not be empty after pushing an element
+	Assert that pushing and popping an element leaves the stack empty
+	Assert that pop should return elements in correct order
