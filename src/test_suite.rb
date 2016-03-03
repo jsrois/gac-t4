@@ -5,16 +5,18 @@ class Sentence
   attr_writer :method
 
   #visitor
-  def serialize(serializer)
-    serializer.write(@method,@arguments,@return_value)
+  def serialize
+    @return_value ? "auto #{@return_value} = " : '' + @method + @arguments? '('+ arguments.join(', ') + ')' : "()"
   end
 end
 
 class TestCase
   attr_accessor :name
+  attr_accessor :sentences
 
-  def initialize name
+  def initialize(name)
     @name = name
+    @sentences = []
   end
 
 end
@@ -29,5 +31,4 @@ class TestSuite
   def add_test_case(test_case)
     @test_cases << test_case
   end
-
 end

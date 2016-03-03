@@ -10,13 +10,22 @@ end
 class InvalidLine < ParsedLine;end
 class SetupLine < ParsedLine;end
 class NewTestCase < ParsedLine;end
-
+class TestCaseDefinition < ParsedLine; end
+class TestCaseDefinitionOpening < ParsedLine; end
+class TestCaseDefinitionClosing < ParsedLine; end
+class InvocationPrecondition < ParsedLine; end
+class AssignmentPrecondition < ParsedLine; end
 
 
 def parse_line line
   regex_array = {
       'SetupLine' => %r{From class (?<target_class>[^\s]+) in (?<file>".+")}, #setup
-      'NewTestCase' => %r{Assert that (?<test_case_name>[^\n]+)} #reading test cases
+      'NewTestCase' => %r{Assert that (?<test_case_name>[^\n]+)}, #reading test cases
+      'TestCaseDefinition' => %r{As calling (?<method>.+) will return (?<return_value>[^\n]+)},
+      'TestCaseDefinitionOpening' => %r{As\n},
+      'TestCaseDefinitionClosing' => %r{^\t*calling (?<method>[^\s]+) will return (?<return_value>[^\n]+)},
+      'InvocationPrecondition' => %r{(?:After|And after) calling (?<method_name>[^\s]+)(?: with argument (?<argument>[^\n,]+))?},
+      'AssignmentPrecondition' => %r{(?:After|And after) setting (?<lso>[^\s]+) to (?<rso>[^\n,]+)}
   }
   regex_array.each do |key,value|
     m = value.match line
@@ -80,7 +89,7 @@ class Collector
     #for each line
     File.open(file_name).each do |line|
       parsed_line = parse_line line
-      raise "Invalid spec format" if  parsed_line.class == InvalidLine
+      raise "Invalid spec format " + line if  parsed_line.class == InvalidLine
       update_on_new_line parsed_line
     end
     @test_suite

@@ -15,9 +15,9 @@ From class Stack<string> in "stack.h"
             After setting firstElement to "firstElement"
             And after setting secondElement to "secondElement"
             And after setting thirdElement to "thirdElement"
-            And calling push with argument firstElement
-            And calling push with argument secondElement
-            And calling push with argument thirdElement
-        calling Pop should return thirdElement
+            And after calling push with argument firstElement
+            And after calling push with argument secondElement
+            And after calling push with argument thirdElement
+        calling Pop will return thirdElement
         and then calling Pop should return secondElement
         and then calling Pop should return firstElement
