@@ -1,2 +1,2 @@
 #!/bin/sh
-ruby -Isrc test_generator.rb $*
+ruby -Isrc src/test_generator.rb $*
