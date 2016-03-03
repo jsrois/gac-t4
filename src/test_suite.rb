@@ -14,10 +14,12 @@ end
 class Expectation
 	attr_accessor :method
 	attr_accessor :return_value
+  attr_accessor :arguments
 	
-	def initialize(method, return_value)
+	def initialize(method, return_value, arguments)
 			@method = method
 			@return_value = return_value
+      @arguments = arguments
 	end
 end
 

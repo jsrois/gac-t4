@@ -31,10 +31,10 @@ def parse_line line
   regex_array = {
       'SetupLine' => %r{From class (?<target_class>[^\s]+) in (?<file>".+")}, #setup
       'NewTestCase' => %r{Assert that (?<test_case_name>[^\n]+)}, #reading test cases
-      'TestCaseDefinition' => %r{As calling (?<method>.+) will return (?<return_value>[^\n]+)},
+      'TestCaseDefinition' => %r{As calling (?<method>.+)(?: with (?<arguments>.+))? will return (?<return_value>[^\n]+)},
       'TestCaseDefinitionOpening' => %r{As\n},
-      'TestCaseDefinitionClosing' => %r{^[\t\W]+(?:and )?calling (?<method>[^\s]+) will return (?<return_value>[^\n]+)},
-      'InvocationPrecondition' => %r{(?:After|And after) calling (?<method>[^\s]+)(?: with (?<argument_list>[^\n]+))?},
+      'TestCaseDefinitionClosing' => %r{^[\t\W]+(?:and )?calling (?<method>[^\s]+)(?: with (?<arguments>[^\s]+))? will return (?<return_value>[^\n]+)},
+      'InvocationPrecondition' => %r{(?:After|And after) calling (?<method>[^\s]+)(?: with (?<arguments>.*))?},
       'AssignmentPrecondition' => %r{(?:After|And after) setting (?<lso>[^\s]+) to (?<rso>[^\n,]+)}
   }
   regex_array.each do |key,value|
@@ -76,32 +76,24 @@ class AddingTestCases < State
       context.test_suite.add_test_case context.current_test_case if context.current_test_case
       context.current_test_case = TestCase.new camelize(input.params["test_case_name"])
     elsif input.class == TestCaseDefinition
-    	context.current_test_case.expectations.push Expectation.new input.params["method"], input.params["return_value"]
+    	context.current_test_case.expectations.push Expectation.new input.params["method"], input.params["return_value"], input.params['arguments']
     elsif input.class == TestCaseDefinitionOpening
-			context.test_suite.add_test_case context.current_test_case if context.current_test_case
-			next_state = AddingConditions.new
+    elsif input.class == InvocationPrecondition
+        invocation = Precondition.new
+        invocation.method     = input.params["method"]
+        invocation.arguments = input.params['arguments']
+        context.current_test_case.preconditions.push invocation
+    elsif input.class == AssignmentPrecondition
+        assignment = Precondition.new
+        assignment.lso = input.params['lso']
+        assignment.rso = input.params['rso']
+        context.current_test_case.preconditions.push assignment
+    elsif input.class == TestCaseDefinitionClosing
+        context.current_test_case.expectations.push Expectation.new input.params["method"], input.params["return_value"], input.params['arguments']
     end
     next_state
   end
 end
-
-class AddingConditions < State
-	def update(input, context)
-		next_state = AddingConditions.new
-		if 		input.class == InvocationPrecondition
-			invocation = Precondition.new
-			invocation.method = input.params["method"]
-			invocation.arguments = Array.new
-			context.current_test_case.preconditions.push invocation
-		elsif input.class == AssignmentPrecondition
-			
-		elsif input.class == TestCaseDefinitionClosing
-			
-		end 
-	end
-end
-
-
 
 class Collector
   attr_accessor :current_test_case
@@ -121,7 +113,6 @@ class Collector
     File.open(file_name).each do |line|
       parsed_line = parse_line line
       raise "Invalid spec format:\n" + line if  parsed_line.class == InvalidLine
-      p "State is " + @state.class.to_s + " line is " + parsed_line.class.to_s
       update_on_new_line parsed_line
     end    
     @test_suite.add_test_case current_test_case if current_test_case && @state.class == AddingTestCases

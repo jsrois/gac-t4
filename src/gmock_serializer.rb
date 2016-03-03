@@ -1,10 +1,14 @@
 require 'erb'
 class GMockSerializer
 	def serialize_expectation(expectation)
-		%{ EXPECT_EQ(#{expectation.method}(),#{expectation.return_value});}
+		%{EXPECT_EQ(object.#{expectation.method}(#{expectation.arguments}),#{expectation.return_value});}
 	end
 	def serialize_precondition(precondition)
-		"SOME ASSIGNMENT OR CALL"
+		sentence = ''
+    sentence = "auto #{precondition.lso} = " if precondition.lso
+    sentence += "#{precondition.rso};" if precondition.rso
+    sentence += "object.#{precondition.method}(#{precondition.arguments});" if precondition.method
+    sentence
 	end
   def get_template()
 %{#include <gmock/gmock.h>
@@ -20,14 +24,14 @@ protected:
 TEST_F(TestSuite, <%=test_case.name%>)
 {
 <% test_case.preconditions.each do |precondition| %>
- <%= serialize_precondition precondition %> 
+ <%= serialize_precondition precondition %>
 <% end %>
 <% test_case.expectations.each do |expectation| %>
- <%= serialize_expectation expectation %> 
+ <%= serialize_expectation expectation %>
 <% end %>
 }
 <% end %>
-    }
+}
   end
 
   def run (test_suite)
