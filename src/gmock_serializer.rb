@@ -1,7 +1,7 @@
 require 'erb'
 class GMockSerializer
 	def serialize_expectation(expectation)
-		"EXPECT SOMETHING HERE"	
+		%{ EXPECT_EQ(#{expectation.method}(),#{expectation.return_value});}
 	end
 	def serialize_precondition(precondition)
 		"SOME ASSIGNMENT OR CALL"

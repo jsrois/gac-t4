@@ -1,13 +1,14 @@
 
-class Sentence
-  attr_writer :return_value
-  attr_writer :arguments
-  attr_writer :method
 
-  #visitor
-  def serialize
-    @return_value ? "auto #{@return_value} = " : '' + @method + @arguments? '('+ arguments.join(', ') + ')' : "()"
-  end
+# auto LSO = RSO; "setting LSO to RSO"
+# [auto LSO = ]A(); "Setting LSO to the result of calling A" / "calling A"
+# [auto LSO = ]A(Args); "Setting LSO to the result of calling A with arguments (Args)"/ "calling A with arguments (Args)"
+class Precondition
+	attr_accessor :lso
+	attr_accessor :rso
+  attr_accessor :arguments
+  attr_accessor :method  
+  
 end
 
 class Expectation

@@ -23,6 +23,10 @@ def camelize(str)
   str.split(' ').map {|w| w.capitalize}.join if str
 end
 
+def parse_csv
+	str.split(',')
+end
+
 def parse_line line
   regex_array = {
       'SetupLine' => %r{From class (?<target_class>[^\s]+) in (?<file>".+")}, #setup
@@ -30,7 +34,7 @@ def parse_line line
       'TestCaseDefinition' => %r{As calling (?<method>.+) will return (?<return_value>[^\n]+)},
       'TestCaseDefinitionOpening' => %r{As\n},
       'TestCaseDefinitionClosing' => %r{^[\t\W]+(?:and )?calling (?<method>[^\s]+) will return (?<return_value>[^\n]+)},
-      'InvocationPrecondition' => %r{(?:After|And after) calling (?<method_name>[^\s]+)(?: with argument (?<argument>[^\n,]+))?},
+      'InvocationPrecondition' => %r{(?:After|And after) calling (?<method>[^\s]+)(?: with (?<argument_list>[^\n]+))?},
       'AssignmentPrecondition' => %r{(?:After|And after) setting (?<lso>[^\s]+) to (?<rso>[^\n,]+)}
   }
   regex_array.each do |key,value|
@@ -71,12 +75,32 @@ class AddingTestCases < State
       # we don't wanna lose the current test_case!
       context.test_suite.add_test_case context.current_test_case if context.current_test_case
       context.current_test_case = TestCase.new camelize(input.params["test_case_name"])
-    elsif input.class == 'TestCaseDefinition'
+    elsif input.class == TestCaseDefinition
     	context.current_test_case.expectations.push Expectation.new input.params["method"], input.params["return_value"]
+    elsif input.class == TestCaseDefinitionOpening
+			context.test_suite.add_test_case context.current_test_case if context.current_test_case
+			next_state = AddingConditions.new
     end
     next_state
   end
 end
+
+class AddingConditions < State
+	def update(input, context)
+		next_state = AddingConditions.new
+		if 		input.class == InvocationPrecondition
+			invocation = Precondition.new
+			invocation.method = input.params["method"]
+			invocation.arguments = Array.new
+			context.current_test_case.preconditions.push invocation
+		elsif input.class == AssignmentPrecondition
+			
+		elsif input.class == TestCaseDefinitionClosing
+			
+		end 
+	end
+end
+
 
 
 class Collector
@@ -97,6 +121,7 @@ class Collector
     File.open(file_name).each do |line|
       parsed_line = parse_line line
       raise "Invalid spec format:\n" + line if  parsed_line.class == InvalidLine
+      p "State is " + @state.class.to_s + " line is " + parsed_line.class.to_s
       update_on_new_line parsed_line
     end    
     @test_suite.add_test_case current_test_case if current_test_case && @state.class == AddingTestCases
