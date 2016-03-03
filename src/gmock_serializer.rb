@@ -31,6 +31,12 @@ TEST_F(TestSuite, <%=test_case.name%>)
 <% end %>
 }
 <% end %>
+
+int main(int argc, char ** argv)
+{
+    ::testing::InitGoogleMock(&argc,argv);
+    return RUN_ALL_TESTS();
+}
 }
   end
 

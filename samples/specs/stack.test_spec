@@ -1,15 +1,15 @@
 From class Stack<string> in "stack.h"
     Assert that object can be created normally
 	Assert that no element should be empty
-		As calling IsEmpty will return true
+		As calling isEmpty will return true
 	Assert that stack should not be empty after pushing an element
 		As
-			After calling Push with "first element"
-		calling isEmpty with "foo","bar" will return false
+			After calling push with "first element"
+		calling isEmpty will return false
 	Assert that pushing and popping an element leaves the stack empty
 		As
-			After calling Push with "first element"
-			And after calling Pop
+			After calling push with "first element"
+			And after calling pop
 		calling isEmpty will return true
     Assert that pop should return elements in correct order
         As
@@ -19,6 +19,6 @@ From class Stack<string> in "stack.h"
             And after calling push with firstElement
             And after calling push with secondElement
             And after calling push with thirdElement
-        calling Pop will return thirdElement
-        and calling Pop will return secondElement
-        and calling Pop will return firstElement
+        calling pop will return thirdElement
+        and calling pop will return secondElement
+        and calling pop will return firstElement
