@@ -1,7 +1,7 @@
 require 'erb'
 class GMockSerializer
 	def serialize_expectation(expectation)
-		%{EXPECT_EQ(object.#{expectation.method}(#{expectation.arguments}),#{expectation.return_value});}
+		%{EXPECT_EQ(#{expectation.return_value},object.#{expectation.method}(#{expectation.arguments}));}
 	end
 	def serialize_precondition(precondition)
 		sentence = ''
