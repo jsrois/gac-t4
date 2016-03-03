@@ -1,4 +1,5 @@
 From class Stack<string> in "stack.h"
+    Assert that object can be created normally
 	Assert that no element should be empty
 		As calling IsEmpty will return true
 	Assert that stack should not be empty after pushing an element

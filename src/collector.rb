@@ -12,11 +12,10 @@ end
 class InvalidLine < ParsedLine;end
 class SetupLine < ParsedLine;end
 class NewTestCase < ParsedLine;end
-class TestCaseDefinition < ParsedLine; end
 class TestCaseDefinitionOpening < ParsedLine; end
-class TestCaseDefinitionClosing < ParsedLine; end
 class InvocationPrecondition < ParsedLine; end
 class AssignmentPrecondition < ParsedLine; end
+class ExpectationSentence < ParsedLine; end
 
 # converts "a plain text sentence" into "APlainTextSentence" (camelcase)
 def camelize(str)
@@ -31,9 +30,8 @@ def parse_line line
   regex_array = {
       'SetupLine' => %r{From class (?<target_class>[^\s]+) in (?<file>".+")}, #setup
       'NewTestCase' => %r{Assert that (?<test_case_name>[^\n]+)}, #reading test cases
-      'TestCaseDefinition' => %r{As calling (?<method>.+)(?: with (?<arguments>.+))? will return (?<return_value>[^\n]+)},
+      'ExpectationSentence' => %r{calling (?<method>[^\s]+)(?: with (?<arguments>.+))? will return (?<return_value>[^\n]+)},
       'TestCaseDefinitionOpening' => %r{As\n},
-      'TestCaseDefinitionClosing' => %r{^[\t\W]+(?:and )?calling (?<method>[^\s]+)(?: with (?<arguments>[^\s]+))? will return (?<return_value>[^\n]+)},
       'InvocationPrecondition' => %r{(?:After|And after) calling (?<method>[^\s]+)(?: with (?<arguments>.*))?},
       'AssignmentPrecondition' => %r{(?:After|And after) setting (?<lso>[^\s]+) to (?<rso>[^\n,]+)}
   }
@@ -75,7 +73,7 @@ class AddingTestCases < State
       # we don't wanna lose the current test_case!
       context.test_suite.add_test_case context.current_test_case if context.current_test_case
       context.current_test_case = TestCase.new camelize(input.params["test_case_name"])
-    elsif input.class == TestCaseDefinition
+    elsif input.class == ExpectationSentence
     	context.current_test_case.expectations.push Expectation.new input.params["method"], input.params["return_value"], input.params['arguments']
     elsif input.class == TestCaseDefinitionOpening
     elsif input.class == InvocationPrecondition
@@ -88,8 +86,6 @@ class AddingTestCases < State
         assignment.lso = input.params['lso']
         assignment.rso = input.params['rso']
         context.current_test_case.preconditions.push assignment
-    elsif input.class == TestCaseDefinitionClosing
-        context.current_test_case.expectations.push Expectation.new input.params["method"], input.params["return_value"], input.params['arguments']
     end
     next_state
   end
